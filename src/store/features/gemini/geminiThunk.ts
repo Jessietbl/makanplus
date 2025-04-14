@@ -1,32 +1,25 @@
-import { createAsyncThunk } from "@reduxjs/toolkit"
+import { createAsyncThunk } from "@reduxjs/toolkit";
 
+/**
+ * Async thunk to analyze feedback using Gemini API.
+ * Accepts multilingual input from B40 users or businesses.
+ */
 export const fetchGeminiContent = createAsyncThunk(
-    'gemini/fetchContent',
-    async (inputText: string) => {
-        const response = await fetch('/api/gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ inputText }),
-        })
-        const data = await response.json()
-        return data.text
-    }
-)
+  'gemini/fetchContent',
+  async (inputText: string, { rejectWithValue }) => {
+    try {
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback: inputText }),
+      });
 
-export const analyzeFeedback = createAsyncThunk(
-    "gemini/analyzeFeedback",
-    async (feedback: string, thunkAPI) => {
-      const res = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ feedback })
-      })
-      if (!res.ok) {
-        const err = await res.text()
-        return thunkAPI.rejectWithValue(err)
-      }
-      const data = await res.json()
-      return data
+      const data = await res.json();
+      if (!res.ok) return rejectWithValue(data.error || "Gemini failed");
+      return data; // return JSON { sentiment, summary, emoji }
+    } catch (err: any) {
+      return rejectWithValue(err.message);
     }
-)
-  
+  }
+);
+
