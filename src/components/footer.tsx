@@ -1,26 +1,45 @@
-import React from "react"
-import Link from "next/link"
-import { FaYoutube, FaGithub } from "react-icons/fa"
-
+import React from "react";
+import Link from "next/link";
+// If you decide to keep icons, import them. Otherwise, remove FaGithub, etc.
+// import { FaYoutube, FaGithub } from "react-icons/fa";
 
 export default function Footer() {
-    return <footer className="flex items-start justify-start gap-3 mt-auto">
-        <div className="flex-1">
-            <Link href="/" className="logo block leading-[12px]">MAKAN+</Link>
-            <span className="text-[10px] credits">Developed by <a target="_blank" href="https://www.linkedin.com/in/wen-qi-k-966581138/">Wen Qi</a></span>
-            <div className="external-links flex items-center gap-2  pt-8">
-                <a target="_blank" href="https://github.com/shaan98kho/makanplus" rel="noopener noreferrer"
-                ><FaGithub/></a>
-                <a ><FaYoutube/></a>
-            </div>
-            <div>
-
-                <p></p>
-                <p></p>
-            </div>
-        </div>
-        <div className="flex-1"></div>
-        <div className="flex-1"></div>
+  return (
+    <footer className="flex items-start justify-start gap-3 mt-auto p-4">
+      <div className="flex-1">
+        {/* If you'd like a link back to your homepage */}
+        <Link href="/" className="logo block leading-[12px] text-lg font-bold">
+          MAKAN+
+        </Link>
         
+        {/* Remove or comment out the developer info if you don't want to show it */}
+        {/* <span className="text-xs credits">
+        </span> */}
+        
+        {/* External links can be removed entirely */}
+        {/* 
+        <div className="external-links flex items-center gap-2 pt-4">
+          <a 
+            target="_blank" 
+            href="https://github.com/Jessietbl/makanplusweb" 
+            rel="noopener noreferrer"
+          >
+            <FaGithub />
+          </a>
+          <a 
+            target="_blank" 
+            href="https://github.com/shaankho98/makanplus" 
+            rel="noopener noreferrer"
+          >
+            <FaGithub />
+          </a>
+        </div>
+        */}
+      </div>
+      
+      {/* Optionally keep empty placeholders if you prefer layout spacing */}
+      <div className="flex-1"></div>
+      <div className="flex-1"></div>
     </footer>
+  );
 }

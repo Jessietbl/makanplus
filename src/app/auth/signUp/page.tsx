@@ -28,6 +28,7 @@ interface UserData {
 }
 
 export default function SignUp() {
+  // Main form state
   const [formData, setFormData] = useState<UserData>({
     email: "",
     password: "",
@@ -41,11 +42,22 @@ export default function SignUp() {
     completed_module: 0,
     name: "",
   });
+  
+  // State for confirm password
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  
+  // State for password error
   const [pwError, setPwError] = useState<string>("");
-  const [userRole, setuserRole] = useState<string>("");
+  
+  // State for user role selection
+  const [userRole, setUserRole] = useState<string>("");
+  
+  // Toast message for successful registration
   const [toastMsg, setToastMsg] = useState<string>("");
+  
+  // Signup error (for non-demo users)
   const [signupError, setSignupError] = useState<string | null>(null);
+  
   const dispatch: AppDispatch = useDispatch();
   const { loading, success } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
@@ -67,11 +79,24 @@ export default function SignUp() {
     });
   };
 
-  // Integrated handleSubmit.
+  // Handle confirm password input change.
+  const handleConfirmPassword = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setConfirmPassword(e.target.value);
+  };
+
+  // Handle generic input changes.
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Main handleSubmit function.
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Password match check
+    // Check if passwords match.
     if (formData.password !== confirmPassword) {
       setPwError("Passwords do not match!");
       return;
@@ -79,11 +104,11 @@ export default function SignUp() {
       setPwError("");
     }
 
-    // Define demo emails for the mock flow.
+    // Define demo emails for mock flow.
     const demoEmails = new Set(["demo.user@example.com", "partner@example.com"]);
 
     if (demoEmails.has(formData.email)) {
-      // Use the mock sign-up function.
+      // Use mock sign-up for demo accounts.
       const result = mockSignUp(formData as DemoUser);
       if (result.success) {
         console.log("Mock sign-up successful:", result.user);
@@ -92,7 +117,7 @@ export default function SignUp() {
         setSignupError(result.message || "Mock sign-up failed");
       }
     } else {
-      // Otherwise, use the real registration flow.
+      // Use the real registration flow.
       const payload = {
         email: formData.email,
         password: formData.password,
@@ -120,21 +145,6 @@ export default function SignUp() {
     }
   }, [success]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ): void => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleConfirmPassword = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    setConfirmPassword(e.target.value);
-  };
-
   return (
     <>
       {toastMsg && (
@@ -150,19 +160,20 @@ export default function SignUp() {
       {signupError && <p className="error">{signupError}</p>}
 
       <GenericForm onSubmit={handleSubmit}>
-        <h1>Sign Up{userRole === "" && " As"}</h1>
+        <h1>
+          Sign Up{userRole === "" && " As"}
+        </h1>
         {userRole !== "" && (
           <p className="pb-6 microcopy">
             Changed your mind? Sign up as{" "}
             <span
               onClick={() => {
-                setuserRole(
-                  userRole === "customer" ? "business_partner" : "customer"
-                );
+                const newRole = userRole === "customer" ? "business_partner" : "customer";
+                setUserRole(newRole);
                 clearInput();
                 setFormData({
                   ...formData,
-                  role: userRole === "customer" ? "business_partner" : "customer",
+                  role: newRole,
                 });
               }}
               className="highlight cursor-pointer underline"
@@ -177,9 +188,10 @@ export default function SignUp() {
           <div className="m-auto">
             <div className="flex gap-5 justify-center items-center">
               <button
+                type="button"
                 className="btn"
                 onClick={() => {
-                  setuserRole("customer");
+                  setUserRole("customer");
                   clearInput();
                   setFormData({ ...formData, role: "customer" });
                 }}
@@ -188,9 +200,10 @@ export default function SignUp() {
               </button>
               <span className="font-bold">or</span>
               <button
+                type="button"
                 className="btn"
                 onClick={() => {
-                  setuserRole("business_partner");
+                  setUserRole("business_partner");
                   clearInput();
                   setFormData({ ...formData, role: "business_partner" });
                 }}
@@ -308,6 +321,7 @@ export default function SignUp() {
               />
             </div>
             {pwError !== "" && <span className="error">{pwError}</span>}
+
             <button type="submit" className="btn mt-9 w-full">
               {loading ? <FiLoader /> : "Sign Up"}
             </button>

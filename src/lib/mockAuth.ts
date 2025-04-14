@@ -9,9 +9,9 @@ export interface DemoUser {
   // Predefined demo users for mock authentication.
   const demoUsers: DemoUser[] = [
     {
-      email: "demo.user@example.com",
+      email: "user.demo@example.com",
       password: "password123",
-      name: "Demo User",
+      name: "User Demo",
       role: "customer",
       address: "123 Example Street",
     },

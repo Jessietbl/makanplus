@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Prompt (using triple-backtick JSON block)
+    // 2. Build the prompt with a code block for JSON
     const prompt = `
 You are a helpful assistant that analyzes customer feedback.
 
-Return ONLY a valid JSON object using this format:
+Return ONLY a valid JSON object using the following format:
 \`\`\`json
 {
   "sentiment": "positive" | "neutral" | "negative",
@@ -39,16 +39,19 @@ Respond ONLY with the JSON object wrapped inside a code block. No extra text.
       },
     ];
 
-    // 3. Check Gemini key
+    // 3. Check for the API key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "Gemini API key is not configured." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Gemini API key is not configured." },
+        { status: 500 }
+      );
     }
 
-    // 4. Init Gemini
+    // 4. Initialize Gemini API
     const ai = new GoogleGenAI({ apiKey });
 
-    // 5. Generate content
+    // 5. Request generation from Gemini
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
       contents: contentsPayload,
@@ -56,18 +59,19 @@ Respond ONLY with the JSON object wrapped inside a code block. No extra text.
 
     const textOutput = response?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!textOutput) {
-      return NextResponse.json({ error: "Empty response from Gemini." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Empty response from Gemini." },
+        { status: 500 }
+      );
     }
 
-    // 6. Extract JSON block from triple backticks
+    // 6. Extract JSON block inside triple backticks
     const match = textOutput.match(/```json\s*({[\s\S]*?})\s*```/);
     const jsonString = match ? match[1] : textOutput;
 
+    let parsed;
     try {
-      // Parse the JSON
-      const parsed = JSON.parse(jsonString.trim());
-      // Return the structured JSON to the client
-      return NextResponse.json(parsed);
+      parsed = JSON.parse(jsonString.trim());
     } catch (err) {
       console.error("❌ Failed to parse Gemini response:", jsonString);
       return NextResponse.json(
@@ -75,8 +79,26 @@ Respond ONLY with the JSON object wrapped inside a code block. No extra text.
         { status: 500 }
       );
     }
+
+    // 7. Fallback: If emoji is missing or empty, assign based on sentiment.
+    if (!parsed.emoji || parsed.emoji.trim() === "") {
+      if (parsed.sentiment === "positive") {
+        parsed.emoji = "😊";
+      } else if (parsed.sentiment === "neutral") {
+        parsed.emoji = "😐";
+      } else if (parsed.sentiment === "negative") {
+        parsed.emoji = "😞";
+      } else {
+        parsed.emoji = "🤔"; // fallback default emoji
+      }
+    }
+
+    return NextResponse.json(parsed);
   } catch (error) {
     console.error("Gemini API error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

@@ -2,9 +2,15 @@
 
 import React, { useState } from 'react';
 
+type SentimentAnalysis = {
+  sentiment: "positive" | "neutral" | "negative";
+  summary: string;
+  emoji: string;
+};
+
 export default function FeedbackPage() {
   const [inputText, setInputText] = useState('');
-  const [response, setResponse] = useState<{ summary: string; emoji: string } | null>(null);
+  const [analysis, setAnalysis] = useState<SentimentAnalysis | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,7 +20,7 @@ export default function FeedbackPage() {
 
     setLoading(true);
     setError('');
-    setResponse(null);
+    setAnalysis(null);
 
     try {
       const res = await fetch('/api/gemini', {
@@ -22,19 +28,17 @@ export default function FeedbackPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ feedback: inputText }),
       });
-
+      
       const data = await res.json();
-
+      
       if (!res.ok) {
-        setError(data.error || 'Unknown error');
+        setError(data.error || 'Request failed.');
       } else {
-        setResponse({
-          summary: data.summary,
-          emoji: data.emoji,
-        });
+        // data is expected to be an object: { sentiment, summary, emoji }
+        setAnalysis(data);
       }
     } catch (err: any) {
-      setError(err.message || 'API error');
+      setError(err.message || 'Unknown error occurred');
     } finally {
       setLoading(false);
     }
@@ -45,15 +49,15 @@ export default function FeedbackPage() {
       <h1 className="text-xl font-bold">💬 Feedback Analyzer</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
-          className="w-full p-2 border rounded"
+          className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400 transition"
           rows={4}
           placeholder="Type your feedback here..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
         />
         <button
-          className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
           type="submit"
+          className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition disabled:opacity-50"
           disabled={loading}
         >
           {loading ? 'Analyzing...' : 'Analyze Feedback'}
@@ -66,12 +70,13 @@ export default function FeedbackPage() {
           <p className="italic text-gray-500">Analyzing...</p>
         ) : error ? (
           <p className="text-red-500">Error: {error}</p>
-        ) : response && (
+        ) : analysis ? (
           <div className="mt-2 text-lg">
-            <p className="text-gray-800">{response.summary}</p>
-            <p className="text-3xl mt-1">{response.emoji}</p>
+            <p className="text-gray-800">Sentiment: {analysis.sentiment}</p>
+            <p className="text-gray-800 mt-1">Summary: {analysis.summary}</p>
+            <p className="text-3xl mt-2">{analysis.emoji}</p>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

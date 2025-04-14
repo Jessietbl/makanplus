@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import FoodGame from '@/components/FoodGame';
+import FoodGame from '@/components/foodGame';
 
 export default function GamePage() {
   return (
